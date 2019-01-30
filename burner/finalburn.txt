@@ -1,0 +1,109 @@
+                   ---------------------------------
+                              Final Burn
+                   ---------------------------------
+
+Basics!
+-------
+                   Final Burn is an arcade emulator.
+ It requires the rom images of the original arcade machines to emulate them.
+            Final Burn is free for non-commercial use only.
+        The current web-page for Final Burn is www.finalburn.com
+
+---------------------------------------------------------------------------
+
+What's new?
+
+v0.516
++ Doh - was missing two Cpu Y program roms. G-Loc runs a tiny bit better now
+  (still no tilt or line sprites though of course).
++ Fixed address range on maths chip (Thunderblade random collisions)
+  Many thanks to Olivier for the info.
+
+v0.515
++ Added a bit of road emulation to Thunderblade, but it's unfinished and
+  doesn't work in After Burner yet.
++ Added Royal Ascot 2 driver. Note it doesn't get past the memory check, and it's
+  not really a playable game anyway (it's a gambling game thing).
+* Switched DDSOM to European (parent) set
++ Fixed road palette on Out Run (e.g. stage 2B)
++ Simplified After Burner hardware cpu emulation slightly.
+
+v0.514
++ Improved Galaxy Force hardware cpu emulation slightly.
+  Power Drift sprites glitches reduced.
++ Added a general cpu 'sleep' algorithm which increases the frame rate of Rail Chase
+  a little bit.
+- Strike Fighter cockpit (line sprites) has disappeared (?!) no idea why.
++ Changed keyboard support so it doesn't require DirectX 5 to run, only
+  normal function calls.
+  This means Final Burn should now run on just about any version of DirectX
+  and so should work on Windows NT too.
+
+NOTE: This means that keyboard input codes have changed so if you have used
+  games in Final Burn before you will have them configured for old key codes.
+  To fix this either delete the config files in the 'cfg' sub-directory.
+
+  Or load your game, click Input, and click Defaults.
+
+v0.511
++ Added .DAT file export to the system menu
+
+-----------------------------------------------------------------------
+
+Using Final Burn
+------------------
+Put the romsets (zipped) in the subdirectory (folder) called "roms".
+
+Note: the emulator colors will appear wrong if your desktop is in 256-color (8-bit).
+Right-click on your desktop, properties, settings, and raise you color depth to 16-bit or higher
+before you run the emulator.
+
+Now Run the emulator and select your game, click Load, pick the game you wish to play.
+
+To Configure Input
+------------------
+Press Input to bring up the input list.
+Then double-click on an input, and press a new key for it.
+
+Emu Keys
+--------
+Escape: Toggle Options Panel
+Alt-P : Pause/Unpause
+Alt-O (while paused): advance One frame
+Alt-I : Increase speed (toggle on/off)
+Alt-L : (CPS games only) Press to toggle background layers on or off.
+F8    : Increase speed (while pressed)
+
+Default Game Keys
+------------------------------
+  1 = Start button
+  5 = Insert coin
+ F2 = Diagnostic Button
+
+(Keyboard = Player 1)
+  Up/Down/Left/Right is on keyboard
+  Z = Fire 1 / Low kick
+  X = Fire 2 / Mid kick
+  C = Fire 3 / High kick
+  A = Fire 4 / Low punch
+  S = Fire 5 / Mid punch
+  D = Fire 6 / High punch
+  F = throttle up
+  V = throttle down
+
+(Joystick = Player 1)
+  Button 1 = Fire 1 / Low kick
+  Button 2 = Fire 2 / Mid kick
+  etc...
+
+Many many thanks to...
+------------------------------
+Everyone who researched these classic games but especially:
+Mike and Darren for the excellent 68000 emulator
+Thierry for the original System-16 emulator
+Charles for his in-depth notes on System-16 hardware
+Olivier for his new research into System-16 based hardware
+The entire MameDev team and FBA team
+...and anyone else I forgot!
+
+---------------------------------------------------------------
