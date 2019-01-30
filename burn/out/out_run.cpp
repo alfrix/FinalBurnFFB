@@ -4,10 +4,15 @@
 unsigned char OutReset=0;
 unsigned char OutButton[8]={0,0,0,0,1,0,0,0}; // Start in low gear
 unsigned char OutComb=0; // Above combined into a byte
+
+unsigned char OutForce2=0; // Above combined into a byte
+unsigned char OutForce3=0; // Above combined into a byte
+
 unsigned char OutAxis[3]={0x80,0x80,0x80};
 unsigned char OutDip[2]={0x00,0x05};
 unsigned char OutGear=0;
 static unsigned char LastGear=0;
+
 
 int OutRunReset()
 {

@@ -40,7 +40,6 @@ int OutGrDraw()
     // Get horizontal shift of road (200-400)
     sx[0]=Grn[0x200+Vert]-0x5f8;
     sx[1]=Grn[0x400+Vert]-0x5f8;
-    
     for (pPix=pl,x=0; x<320; pPix+=nBurnBpp,x++,sx[0]++,sx[1]++)
     {
       int c[2]={0,0},Col;

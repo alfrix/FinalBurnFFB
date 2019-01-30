@@ -35,18 +35,35 @@ static unsigned char Aft1ReadByte(unsigned int a)
     else
     {
       // After Burner
-      if (AftInputSel==4) return (unsigned char)(0xc0-(AftInput[4]>>1));
+      if (AftInputSel==0) return (unsigned char)(AftInput[3]); // x pos
+      if (AftInputSel==4) return (unsigned char)(0xff-AftInput[4]); // y pos
       if (AftInputSel==8)
       {
         if (AftButton[8]) return 0xff;
         if (AftButton[9]) return 0x00;
         return (unsigned char)(AftInput[5]);
       }
-      return (unsigned char)(0x28+(AftInput[3]*0xb/0x10));
+     if (AftInputSel==12) {
+//      if (abs(0x80-AftInput[4])<50) return (unsigned char) 0x80;
+        return (unsigned char)(0xff-AftInput[4]); // y motor status
+     }
+     if (AftInputSel==16) {
+//      if (abs(0x80-AftInput[3])<50) return (unsigned char) 0x80;
+        return (unsigned char)(AftInput[3]); // x motor status
+     }
     }
   }
 
-  if (a==0x140001) return 0xff; // motor response?
+  if (a==0x140001) {
+     // Motor Limit Status
+     unsigned char limit=0;
+     if ((unsigned char) AftInput[4]<0x03) limit += 1;
+     else if ((unsigned char) AftInput[4]>0xfc) limit += 4;
+     if ((unsigned char) AftInput[3]>0xfc) limit += 8;
+     else if ((unsigned char) AftInput[3]<0x03) limit += 32;
+     return limit;
+  }
+
   if (a==0x150001) return (unsigned char)(~AftInput[0]); //input
   if (a==0x150005) return (unsigned char)(~AftInput[1]); //dip 
   if (a==0x150007) return (unsigned char)(~AftInput[2]); //dip
@@ -55,6 +72,23 @@ static unsigned char Aft1ReadByte(unsigned int a)
 
 static void Aft1WriteByte(unsigned int a,unsigned char d)
 {
+  if (a==0x140003) {
+     if (d!=0 && d!=8) {
+        int force=0;
+         unsigned char xforce=0;
+         unsigned char yforce=0;
+        xforce=d&0x0f;
+        yforce=(d&0xf0)>>4;
+        if (xforce<8) force=xforce-1;
+        if (xforce>8) force=15-xforce;
+        if (yforce<8)
+         force=yforce-1;
+        if (yforce>8)
+           force=15-yforce;
+        if (xforce!=8 || yforce!=8) DforceFeedback(xforce, yforce, force);
+     }
+     return;
+  }
   int ab; ab=(a>>16)&0xff;
   if (ab==0x12) { BsysPalWriteByte(a,d); return; } // palette write
   if (a==0x130001) { AftInputSel=d; return; } // Input select

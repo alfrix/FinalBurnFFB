@@ -9,8 +9,51 @@ static IDirectInputDevice2 *JoyList[MAX_JOYSTICKS]={NULL};
 // Number of joysticks connected to this machine
 static int JoystickCount=0;
 
+int diMaxForce=10000;
+int diMinForce=-1000;
+int diForceFreq=20;
+
 static DIJOYSTATE *pCalcState=NULL;
 #define DINPUT_BUTTON_COUNT (sizeof(pCalcState->rgbButtons)/sizeof(pCalcState->rgbButtons[0]))
+
+// Force Feedback effects
+LPDIRECTINPUTEFFECT     diConstantForceEffect;
+
+static BOOL InitConstantForceEffects(IDirectInputDevice2 *pJoy)
+{
+   if (diForceFreq<=0) diForceFreq=20;
+   int nRet=0;
+   DWORD            dwAxes[2] = { DIJOFS_X, DIJOFS_Y } ;
+   LONG             lDirection[2] = { 200,0 } ;
+   DIEFFECT         diEffect ;
+   diEffect.dwSize = sizeof(DIEFFECT) ;
+   diEffect.dwFlags = DIEFF_CARTESIAN | DIEFF_OBJECTOFFSETS ;    // Using X/Y style coords
+   diEffect.dwDuration =  DI_SECONDS/diForceFreq;    // Duration: 20th of a second
+   //    diEffect.dwDuration =  INFINITE;    // Duration: never-ending
+   diEffect.dwSamplePeriod = 0 ;
+   diEffect.dwGain = DI_FFNOMINALMAX ;
+   diEffect.dwTriggerButton = DIEB_NOTRIGGER ;
+   diEffect.dwTriggerRepeatInterval = 0 ;
+   diEffect.cAxes = 2 ;
+   diEffect.rgdwAxes = dwAxes ;
+   diEffect.rglDirection = lDirection ;
+   diEffect.lpEnvelope = NULL ;
+
+   DICONSTANTFORCE  diCF = {  -10000 } ;
+   diEffect.cbTypeSpecificParams = sizeof(DICONSTANTFORCE) ;
+   diEffect.lpvTypeSpecificParams = &diCF ;
+   lDirection[0] = -200 ;
+   lDirection[1] = 0 ;
+
+   diEffect.rglDirection = lDirection ;
+   nRet = pJoy->CreateEffect(GUID_ConstantForce,&diEffect,&diConstantForceEffect,NULL) ;
+   if(FAILED(nRet))
+   {
+      diConstantForceEffect = NULL ;
+      return FALSE ;
+   }
+   return TRUE ;
+}
 
 // This function is called back with each joystick connected to the system
 static BOOL CALLBACK DIEnumDevicesProc(LPCDIDEVICEINSTANCE pDDI,LPVOID pvRef)
@@ -47,7 +90,7 @@ static int SetUpJoystick(IDirectInputDevice2 *pJoy)
 
   Ret=pJoy->SetDataFormat(&c_dfDIJoystick);
   if (Ret<0) return 1;
-  Ret=pJoy->SetCooperativeLevel(hWnd,DISCL_NONEXCLUSIVE|DISCL_BACKGROUND);
+  Ret=pJoy->SetCooperativeLevel(hWnd,DISCL_EXCLUSIVE|DISCL_BACKGROUND);
 
   // Make range -0x10000 to 0x10000
   memset(&diprg,0,sizeof(diprg));
@@ -60,8 +103,23 @@ static int SetUpJoystick(IDirectInputDevice2 *pJoy)
   Ret=pJoy->SetProperty(DIPROP_RANGE,&diprg.diph);
   diprg.diph.dwObj        = DIJOFS_Y;
   Ret=pJoy->SetProperty(DIPROP_RANGE,&diprg.diph);
-  
+
+  diprg.diph.dwObj        = DIJOFS_Z;
+  Ret=pJoy->SetProperty(DIPROP_RANGE,&diprg.diph);
+  diprg.diph.dwObj        = DIJOFS_RZ;
+  Ret=pJoy->SetProperty(DIPROP_RANGE,&diprg.diph);
+  DIPROPDWORD diPropAutoCenter ;
+
+  diPropAutoCenter.diph.dwSize = sizeof(diPropAutoCenter) ;
+  diPropAutoCenter.diph.dwHeaderSize = sizeof(DIPROPHEADER) ;
+  diPropAutoCenter.diph.dwObj = 0 ;
+  diPropAutoCenter.diph.dwHow = DIPH_DEVICE ;
+  diPropAutoCenter.dwData = DIPROPAUTOCENTER_OFF ;
+  pJoy->SetProperty(DIPROP_AUTOCENTER, &diPropAutoCenter.diph) ;
+
   Ret=pJoy->Acquire();
+
+   InitConstantForceEffects(pJoy);
 
   return 0;
 }
@@ -86,6 +144,8 @@ int DirInputInit(HINSTANCE hInst,HWND hPassWnd)
 
   // enumerate the joysticks connected to the system
   Ret=pDI->EnumDevices(DIDEVTYPE_JOYSTICK,DIEnumDevicesProc,NULL,DIEDFL_ATTACHEDONLY);
+  Ret=pDI->EnumDevices(DIDEVTYPE_JOYSTICK,DIEnumDevicesProc,NULL,DIEDFL_FORCEFEEDBACK|DIEDFL_ATTACHEDONLY);
+
   if (Ret<0) return 1;
 
   // Set up the DI2 devices
@@ -225,7 +285,60 @@ int DirInputAxis(int i,int Axis)
   {
     case 0: Val=JoyState[i].lX; break;
     case 1: Val=JoyState[i].lY; break;
-    case 2: Val=JoyState[i].lZ; break;
+    case 2: Val=0xff-JoyState[i].lZ; break;
+    case 3: Val=0xff-JoyState[i].lRz; break;
   }
   return Val;
+}
+
+int DforceFeedback(int xdirection,int ydirection, int force)
+{
+   if (diConstantForceEffect==NULL) return -1;
+   if (force<0) return -1;
+
+   LONG             lDirection[2] = { 200,0 } ;
+   LONG magnitude=0;
+   DIEFFECT        diEffect;           // Parameters for effect
+   DICONSTANTFORCE diConstantForce;    // Type-specific parameters
+
+   int nRet=0;
+
+   if (diMaxForce>10000 || diMaxForce<-10000) diMaxForce=10000;
+   if (diMinForce>10000 || diMinForce<-10000) diMinForce=0;
+
+   magnitude=diMaxForce-((diMaxForce-diMinForce)/7*force);
+   diConstantForce.lMagnitude = magnitude;
+   diEffect.dwSize = sizeof(DIEFFECT);
+   diEffect.cbTypeSpecificParams = sizeof(DICONSTANTFORCE);
+   diEffect.lpvTypeSpecificParams = &diConstantForce;
+
+   if (xdirection>0x08) {
+      lDirection[0] = 200 ;
+   }
+   else if (xdirection<0x08) {
+      lDirection[0] = -200 ;
+   }
+   else if (xdirection==0x08) {
+      lDirection[0] = 0 ;
+   }
+
+   if (ydirection>0x08) {
+      lDirection[1] = -200 ;
+   }
+   else if (ydirection<0x08) {
+      lDirection[1] = 200 ;
+   }
+   else if (ydirection==0x08) {
+      //lDirection[1] = 0 ;
+   }
+
+   diEffect.cAxes = 2 ;
+   diEffect.dwFlags = DIEFF_CARTESIAN | DIEFF_OBJECTOFFSETS ;    // Using X/Y style coords
+   diEffect.rglDirection = lDirection ;
+
+   nRet = diConstantForceEffect->SetParameters(&diEffect, DIEP_DIRECTION|DIEP_TYPESPECIFICPARAMS);
+// if (nRet<0) return -1;
+   if (diConstantForceEffect) diConstantForceEffect->Start(1,0);
+
+   return 0;
 }

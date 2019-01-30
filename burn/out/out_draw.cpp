@@ -67,6 +67,12 @@ int OutDrawDo()
   OutRam10[Pos+2]=(OutComb&0x10) ? 'O' : 'I';
   OutRam10[Pos+1]=0x05;
   OutRam10[Pos+3]=0x05;
+/*
+  OutRam10[Pos+4]=OutForce2;
+  OutRam10[Pos+6]=OutForce3;
+  OutRam10[Pos+5]=0x05;
+  OutRam10[Pos+7]=0x05;
+*/
 
   BsysTextPage(OutRam10); // Draw text
   memcpy(OutRam10+Pos,Restore,4);

@@ -58,7 +58,7 @@ int InputMake()
       // Map Joystick axis to analog control
       int nJoy=0;
       nJoy=CinpAxis(pgi->nJoy,pgi->nAxis);
-      nJoy/=0x200;  nJoy+=0x80;
+      nJoy/=0x100;  nJoy+=0x80;
       if (nJoy<0x01) nJoy=0x01;  if (nJoy>0xff) nJoy=0xff; // clip
       *(pgi->pVal)=(unsigned char)nJoy;
     }

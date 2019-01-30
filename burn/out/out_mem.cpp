@@ -81,6 +81,15 @@ static unsigned char Out1ReadByte(unsigned int a)
   if (a==0x140011) return (unsigned char)(~OutComb);   // Buttons
   if (a==0x140015) return (unsigned char)(~OutDip[0]); // Dip A
   if (a==0x140017) return (unsigned char)(~OutDip[1]); // Dip B
+
+  if (a==0x140001) {
+	  // Motor Limit Status
+	  // return 0x2d;
+	  if (OutAxis[0]<0x03) return 0x0d;
+	  if (OutAxis[0]>0xfc) return 0x20;
+	  return 0x2d;
+  }
+
   if (a==0x140031)
   {
     switch (AnalogSelect)
@@ -88,6 +97,8 @@ static unsigned char Out1ReadByte(unsigned int a)
       case 0x0: return OutAxis[0];
       case 0x4: return OutAxis[1];
       case 0x8: return OutAxis[2];
+      case 0xc: return OutAxis[0]; // Motor Status x-pos
+      case 0x10: return OutAxis[1]; // Motor Status y-pos
     }
     return 0;
   }
@@ -96,7 +107,10 @@ static unsigned char Out1ReadByte(unsigned int a)
 
 static void Out1WriteByte(unsigned int a,unsigned char d)
 {
+	struct BurnInputInfo bii;
   int ab=(a>>16)&0xff;
+
+memset(&bii,0,sizeof(bii));
 
   if (ab==0x12) { BsysPalWriteByte(a,d); return; } // palette write
   a&=0xffffff;
@@ -105,6 +119,17 @@ static void Out1WriteByte(unsigned int a,unsigned char d)
   if (a>=0x260000 && a<=0x267fff) { OutRam26[(a^1)-0x260000]=d; return; }
 
   if (a==0x140031) { AnalogSelect=d; return; }
+
+  if (a==0x140003) {
+	  if (d!=0 && d!=8) {
+		  int force=0;
+		  if (d<8) force=d-1;
+		  if (d>8) force=15-d;
+		  DforceFeedback(d, 0, force);
+	  }
+	  return;
+  }
+
   if (a==0xffff07) { OutScode(d); return; }
 }
 

@@ -100,3 +100,5 @@ extern unsigned char BsysSndCode; // The sound code to pass to the z80 program
 int BsysZScan(int nAction);
 int BsysZInit();
 int BsysZExit();
+
+int DforceFeedback(int xdirection,int ydirection,int force);

@@ -76,6 +76,7 @@ int GamcAnalogJoy(struct GameInp *pgi,char *szi,int nPlayer,int nJoy,int nSlide)
   if (strcmp(szi,"x-axis")==0) { pgi->nAxis=0; }
   if (strcmp(szi,"y-axis")==0) { pgi->nAxis=1; }
   if (strcmp(szi,"z-axis")==0) { pgi->nAxis=2; }
+  if (strcmp(szi,"r-axis")==0) { pgi->nAxis=3; }
 
   pgi->nSliderValue=0x8000; // Put slider in the middle
   if (nSlide==2)

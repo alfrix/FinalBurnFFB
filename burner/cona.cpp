@@ -46,6 +46,9 @@ int ConfigAppLoad()
     STR(szAppRomPath)
     VAR(bDrvSaveAll)
     VAR(bReadInputEveryFrame)
+    VAR(diMaxForce)
+	VAR(diMinForce)
+	VAR(diForceFreq)
 
 #undef STR
 #undef VAR
@@ -110,6 +113,12 @@ int ConfigAppSave()
     fprintf (h,"\n// If set to one, read input for every frame even if the graphics is\n");
     fprintf (h,"// frame-skipping (controls could be more responsive, but emu could be slower).\n");
     VAR(bReadInputEveryFrame)
+    fprintf (h,"\n// Maximum magnitude for force feedback (10000 to -10000).\n");
+    VAR(diMaxForce)
+    fprintf (h,"\n// Minimum magnitude for force feedback (10000 to -10000) .\n");
+    VAR(diMinForce)
+    fprintf (h,"\n// Force feedback frequency (0-60) .\n");
+    VAR(diForceFreq)
     fprintf (h,"\n\n\n");
 
 #undef STR

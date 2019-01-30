@@ -277,3 +277,8 @@ extern int bDrvSaveAll;
 int StatedAuto(int bSave);
 int StatedLoad();
 int StatedSave();
+
+// force feedback
+extern int diMaxForce;
+extern int diMinForce;
+extern int diForceFreq;
